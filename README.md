@@ -1,4 +1,4 @@
-# Desafio: Rocketseat/GoSatck
+# Desafio 11: Rocketseat/GoSatck
 
 # GoRestaurant (mobile)
 <p alin="center"><b>Aplicação para estudos em React Native:</b> Aplicativo para pedir pratos no restaurante </p>
