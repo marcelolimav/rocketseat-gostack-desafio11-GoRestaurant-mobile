@@ -29,7 +29,9 @@ import {
   Title,
   TotalContainer,
   AdittionalItem,
+  AdittionalItemTextPrice,
   AdittionalItemText,
+  AdittionalItemPrice,
   AdittionalQuantity,
   PriceButtonContainer,
   TotalPrice,
@@ -47,7 +49,9 @@ interface Extra {
   id: number;
   name: string;
   value: number;
+  formattedValue: string;
   quantity: number;
+  valueTotal: number;
 }
 
 interface Food {
@@ -65,6 +69,7 @@ const FoodDetails: React.FC = () => {
   const [extras, setExtras] = useState<Extra[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [foodQuantity, setFoodQuantity] = useState(1);
+  const [foodTotal, setFoodTotal] = useState(0);
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -74,6 +79,32 @@ const FoodDetails: React.FC = () => {
   useEffect(() => {
     async function loadFood(): Promise<void> {
       // Load a specific food with extras based on routeParams id
+      let dataFavorites: Response;
+      const { data: dataFood } = await api.get(`foods/${routeParams.id}`);
+
+      const filterFood = {
+        ...dataFood,
+        formattedPrice: formatValue(dataFood.price),
+        extras: dataFood.extras.map((extra: Extra) => {
+          return {
+            ...extra,
+            quantity: 0,
+            formattedValue: formatValue(extra.value),
+            valueTotal: 0,
+          };
+        }),
+      };
+
+      try {
+        dataFavorites = await api.get(`favorites/${routeParams.id}`);
+      } catch (error) {}
+
+      setFood(filterFood);
+      setExtras(filterFood.extras);
+
+      if (dataFavorites) {
+        setIsFavorite(!isFavorite);
+      }
     }
 
     loadFood();
@@ -81,30 +112,85 @@ const FoodDetails: React.FC = () => {
 
   function handleIncrementExtra(id: number): void {
     // Increment extra quantity
+    const incrementExtra = extras.map(extra => {
+      if (extra.id === id) {
+        const quantity = extra.quantity + 1;
+        return {
+          ...extra,
+          quantity,
+          valueTotal: quantity * extra.value,
+        };
+      }
+      return extra;
+    });
+    setExtras(incrementExtra);
   }
 
   function handleDecrementExtra(id: number): void {
     // Decrement extra quantity
+    const decrementExtra = extras.map(extra => {
+      if (extra.id === id && extra.quantity >= 1) {
+        const quantity = extra.quantity - 1;
+        return {
+          ...extra,
+          quantity,
+          valueTotal: quantity * extra.value,
+        };
+      }
+      return extra;
+    });
+    setExtras(decrementExtra);
   }
 
   function handleIncrementFood(): void {
     // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
     // Decrement food quantity
+    setFoodQuantity(foodQuantity >= 2 ? foodQuantity - 1 : foodQuantity);
   }
 
-  const toggleFavorite = useCallback(() => {
+  const toggleFavorite = useCallback(async () => {
     // Toggle if food is favorite or not
+    if (!isFavorite) {
+      await api.post('favorites', food);
+    } else {
+      await api.delete(`favorites/${food.id}`);
+    }
+
+    setIsFavorite(!isFavorite);
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
     // Calculate cartTotal
+    const totalExtras = extras.reduce((total, extra) => {
+      return total + extra.valueTotal;
+    }, 0);
+
+    const totalFood =
+      ((food.price ? food.price : 0) + totalExtras) * foodQuantity;
+
+    setFoodTotal(totalFood);
+
+    return formatValue(totalFood);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
     // Finish the order and save on the API
+    const data = {
+      ...food,
+      product_id: food.id,
+      price: foodTotal,
+      extras,
+    };
+
+    data.id = Math.floor(Math.random() * 65536);
+
+    await api.post('orders', data);
+
+    navigation.navigate('DashboardStack');
   }
 
   // Calculate the correct icon name
@@ -153,7 +239,12 @@ const FoodDetails: React.FC = () => {
           <Title>Adicionais</Title>
           {extras.map(extra => (
             <AdittionalItem key={extra.id}>
-              <AdittionalItemText>{extra.name}</AdittionalItemText>
+              <AdittionalItemTextPrice>
+                <AdittionalItemText>{extra.name}</AdittionalItemText>
+                <AdittionalItemPrice>
+                  {extra.formattedValue}
+                </AdittionalItemPrice>
+              </AdittionalItemTextPrice>
               <AdittionalQuantity>
                 <Icon
                   size={15}

@@ -98,7 +98,25 @@ export const AdittionalItem = styled.View`
   margin-top: 8px;
 `;
 
+export const AdittionalItemTextPrice = styled.View`
+  background: #f0f0f5;
+  flex: 1;
+  max-width: 200px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
 export const AdittionalItemText = styled.Text`
+  font-family: 'Poppins-Regular';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 15px;
+  line-height: 18px;
+  color: #6c6c80;
+`;
+
+export const AdittionalItemPrice = styled.Text`
   font-family: 'Poppins-Regular';
   font-style: normal;
   font-weight: normal;
