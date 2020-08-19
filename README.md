@@ -22,4 +22,4 @@ As seguintes ferramentas foram usadas na construção do projeto.
 - [x] Realizar um pedido
 
 ## Preview
-![gorestaurant](https://user-images.githubusercontent.com/26713717/90676175-f894d600-e231-11ea-9815-ee2e02202793.png)
+![gorestaurant_mob](https://user-images.githubusercontent.com/26713717/90682134-e79c9280-e23a-11ea-86c1-ec92c221527c.png)
